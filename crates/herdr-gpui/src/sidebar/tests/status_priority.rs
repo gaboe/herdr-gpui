@@ -47,10 +47,26 @@ fn default_and_custom_orders_rank_agents_and_unknown_is_last() {
 
     let snapshot = mixed_snapshot();
     assert_eq!(
+        sorted_agents(&snapshot, AgentSort::Priority, default)
+            .into_iter()
+            .map(|agent| agent.agent_status)
+            .collect::<Vec<_>>(),
+        [
+            AgentStatus::Blocked,
+            AgentStatus::Done,
+            AgentStatus::Working
+        ]
+    );
+    assert_eq!(
         sorted_agents(&snapshot, AgentSort::Priority, &custom)
-            .first()
-            .map(|agent| agent.agent_status),
-        Some(AgentStatus::Blocked)
+            .into_iter()
+            .map(|agent| agent.agent_status)
+            .collect::<Vec<_>>(),
+        [
+            AgentStatus::Blocked,
+            AgentStatus::Working,
+            AgentStatus::Done
+        ]
     );
 }
 
