@@ -14,7 +14,7 @@ use super::{
     row::{Counts, PrBadge, first_text},
 };
 use crate::config::{ChangeCounts, Theme};
-use herdr_client::protocol::{AgentStatus, ClientShellWorkspace};
+use herdr_client::protocol::{AgentStatus, ClientShellAgent, ClientShellWorkspace};
 use std::collections::{HashMap, HashSet};
 
 /// The repositories that form a group: those with at least one parent and at
@@ -158,18 +158,21 @@ pub(crate) fn workspace_label(workspace: &ClientShellWorkspace, indented: bool) 
 /// Collapsed groups show their most urgent member's status.
 pub(super) fn displayed_workspace_status(
     workspaces: &[ClientShellWorkspace],
+    agents: &[ClientShellAgent],
     workspace: &ClientShellWorkspace,
     collapsed: &HashSet<String>,
+    working_beats_done: bool,
 ) -> AgentStatus {
+    let status = workspace_status(workspace, agents, working_beats_done);
     let Some(worktree) = workspace
         .worktree
         .as_ref()
         .filter(|worktree| !worktree.is_linked_worktree)
     else {
-        return workspace.agent_status;
+        return status;
     };
     if !collapsed.contains(&worktree.key) {
-        return workspace.agent_status;
+        return status;
     }
     workspaces
         .iter()
@@ -179,7 +182,25 @@ pub(super) fn displayed_workspace_status(
                 .as_ref()
                 .is_some_and(|candidate| candidate.key == worktree.key)
         })
-        .map(|candidate| candidate.agent_status)
-        .max_by_key(|status| status_priority(*status))
+        .map(|candidate| workspace_status(candidate, agents, working_beats_done))
+        .max_by_key(|status| status_priority(*status, working_beats_done))
+        .unwrap_or(status)
+}
+
+/// The status a workspace shows in the sidebar. Agent statuses are local
+/// snapshot facts; the daemon's workspace rollup keeps its legacy priority.
+pub(super) fn workspace_status(
+    workspace: &ClientShellWorkspace,
+    agents: &[ClientShellAgent],
+    working_beats_done: bool,
+) -> AgentStatus {
+    if !working_beats_done {
+        return workspace.agent_status;
+    }
+    agents
+        .iter()
+        .filter(|agent| agent.workspace_id == workspace.workspace_id)
+        .map(|agent| agent.agent_status)
+        .max_by_key(|status| status_priority(*status, true))
         .unwrap_or(workspace.agent_status)
 }

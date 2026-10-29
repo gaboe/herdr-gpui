@@ -281,11 +281,13 @@ impl HerdrWindow {
                 });
                 let folds = fold.as_ref().map(|fold| fold.collapsed).zip(fold_toggle);
                 let label = workspace_label(workspace, indented);
-                let shown_status = if self.config.usage.inline {
-                    displayed_workspace_status(&snapshot.workspaces, workspace, collapsed_repos)
-                } else {
-                    workspace.agent_status
-                };
+                let shown_status = displayed_workspace_status(
+                    &snapshot.workspaces,
+                    &snapshot.agents,
+                    workspace,
+                    collapsed_repos,
+                    self.config.sidebar_style.working_beats_done,
+                );
                 let lines = if spaces_custom {
                     tokens::space_rows(
                         &self.config.sidebar_layout.spaces,

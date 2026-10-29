@@ -19,6 +19,7 @@ mod sidebar_search;
 mod sound_volume;
 mod terminal_padding;
 mod update_channel;
+mod working_beats_done;
 
 use crate::agent_skill::{AgentSkill, Choice};
 use crate::settings_window::tests::{skill_fixture, skill_load};

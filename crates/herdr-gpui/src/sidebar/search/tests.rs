@@ -29,12 +29,16 @@ fn devices(snapshot: &ClientShellSnapshot) -> [Device<'_>; 2] {
             id: "local",
             label: "MacBook Pro",
             workspaces: &snapshot.workspaces,
+            agents: &snapshot.agents,
+            working_beats_done: false,
             notes: None,
         },
         Device {
             id: "studio",
             label: "studio.lan",
             workspaces: &[],
+            agents: &[],
+            working_beats_done: false,
             notes: None,
         },
     ]

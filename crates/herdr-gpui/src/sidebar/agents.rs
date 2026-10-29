@@ -52,11 +52,12 @@ pub(super) fn agents_sort(window: &HerdrWindow, cx: &mut Context<HerdrWindow>) -
 }
 
 /// Attention first, then the most recent change, as upstream orders it.
-pub(super) fn status_priority(status: AgentStatus) -> u8 {
+pub(super) fn status_priority(status: AgentStatus, working_beats_done: bool) -> u8 {
     match status {
         AgentStatus::Blocked => 4,
-        AgentStatus::Done => 3,
-        AgentStatus::Working => 2,
+        AgentStatus::Working if working_beats_done => 3,
+        AgentStatus::Done if !working_beats_done => 3,
+        AgentStatus::Done | AgentStatus::Working => 2,
         AgentStatus::Idle => 1,
         AgentStatus::Unknown => 0,
     }
@@ -73,6 +74,7 @@ pub(super) fn status_priority(status: AgentStatus) -> u8 {
 pub(super) fn sorted_agents(
     snapshot: &ClientShellSnapshot,
     sort: crate::preferences::AgentSort,
+    working_beats_done: bool,
 ) -> Vec<&ClientShellAgent> {
     if snapshot.agent_view_label.is_some() {
         return snapshot
@@ -90,7 +92,7 @@ pub(super) fn sorted_agents(
     if sort == crate::preferences::AgentSort::Priority {
         ordered.sort_by_key(|agent| {
             (
-                std::cmp::Reverse(status_priority(agent.agent_status)),
+                std::cmp::Reverse(status_priority(agent.agent_status, working_beats_done)),
                 std::cmp::Reverse(agent.state_change_seq),
             )
         });
@@ -109,6 +111,7 @@ pub(super) fn sorted_agents(
 pub(super) fn panel_agents<'a>(
     hosts: impl IntoIterator<Item = (usize, &'a crate::state::LiveState)>,
     sort: crate::preferences::AgentSort,
+    working_beats_done: bool,
 ) -> Vec<(usize, &'a ClientShellAgent)> {
     let mut merge = sort == crate::preferences::AgentSort::Priority;
     let mut listed = 0;
@@ -120,7 +123,7 @@ pub(super) fn panel_agents<'a>(
         listed += 1;
         merge &= snapshot.agent_view_label.is_none();
         rows.extend(
-            sorted_agents(snapshot, sort)
+            sorted_agents(snapshot, sort, working_beats_done)
                 .into_iter()
                 .map(|agent| (index, live, agent)),
         );
@@ -130,7 +133,7 @@ pub(super) fn panel_agents<'a>(
         rows.sort_by_key(|(_, live, agent)| {
             (
                 !live.status.is_connected(),
-                std::cmp::Reverse(status_priority(agent.agent_status)),
+                std::cmp::Reverse(status_priority(agent.agent_status, working_beats_done)),
                 std::cmp::Reverse(live.agent_recency.of(&agent.pane_id)),
             )
         });
@@ -691,7 +694,7 @@ mod tests {
         snapshot: &herdr_client::protocol::ClientShellSnapshot,
         sort: crate::preferences::AgentSort,
     ) -> Vec<&str> {
-        sorted_agents(snapshot, sort)
+        sorted_agents(snapshot, sort, false)
             .into_iter()
             .map(|agent| agent.pane_id.as_str())
             .collect()

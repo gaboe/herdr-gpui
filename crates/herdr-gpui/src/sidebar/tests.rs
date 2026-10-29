@@ -36,4 +36,5 @@ mod pane_names;
 mod row_text;
 mod statuses;
 mod sticky_hosts;
+mod working_beats_done;
 mod working_marks;

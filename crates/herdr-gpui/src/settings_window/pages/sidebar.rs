@@ -211,6 +211,27 @@ impl SettingsWindow {
                 ),
             )
             .child(
+                ui::row(
+                    theme,
+                    "sidebar-working-beats-done",
+                    fl!("settings-sidebar-working-beats-done"),
+                )
+                .description(fl!("settings-sidebar-working-beats-done-description"))
+                .switch(
+                    ui::toggle(
+                        theme,
+                        "sidebar-working-beats-done-toggle",
+                        self.config.sidebar_style.working_beats_done,
+                        ready,
+                    )
+                    .on_click(cx.listener(|this, _, _, cx| {
+                        let mut intent = SidebarIntent::of(&this.config);
+                        intent.style.working_beats_done = !intent.style.working_beats_done;
+                        this.commit_sidebar(intent, cx);
+                    })),
+                ),
+            )
+            .child(
                 ui::row(theme, "sidebar-select", fl!("settings-sidebar-select"))
                     .description(fl!("settings-sidebar-select-description"))
                     .control(ui::segmented(

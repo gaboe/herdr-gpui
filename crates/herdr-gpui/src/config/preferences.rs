@@ -70,6 +70,8 @@ pub(crate) enum Preference {
     SidebarDeviceFooter(DeviceFooter),
     /// `[sidebar] change_counts`: whose line counts a worktree row shows.
     SidebarChangeCounts(ChangeCounts),
+    /// `[sidebar] working_beats_done`: whether working outranks done.
+    SidebarWorkingBeatsDone(bool),
     /// `None` removes the host's colour.
     HostColor {
         host: String,
@@ -249,6 +251,9 @@ impl Config {
                     "change_counts",
                     Some(toml_edit::Value::from(counts.as_str())),
                 ),
+                Preference::SidebarWorkingBeatsDone(value) => {
+                    (Some("sidebar"), "working_beats_done", Some(value.into()))
+                }
                 Preference::HostColor { host, color } => {
                     if let Some(color) = color.filter(|color| *color > 0xFF_FFFF) {
                         return Err(Error::InvalidHostColor {

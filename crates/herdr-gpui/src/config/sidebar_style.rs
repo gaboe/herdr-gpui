@@ -139,6 +139,8 @@ pub struct SidebarStyle {
     pub hosts: BTreeMap<String, u32>,
     pub overrides: SidebarOverrides,
     pub select: SelectMode,
+    /// Whether a working agent outranks a done agent in workspace status.
+    pub working_beats_done: bool,
 }
 
 impl Default for SidebarStyle {
@@ -151,6 +153,7 @@ impl Default for SidebarStyle {
             hosts: BTreeMap::new(),
             overrides: SidebarOverrides::default(),
             select: SelectMode::default(),
+            working_beats_done: false,
         }
     }
 }
@@ -179,6 +182,7 @@ pub(super) struct SidebarSettings {
     pub(super) select: SelectMode,
     pub(super) device_footer: DeviceFooter,
     pub(super) change_counts: ChangeCounts,
+    pub(super) working_beats_done: bool,
     pub(super) hosts: BTreeMap<String, String>,
     pub(super) activity_bar: Option<bool>,
     pub(super) automations: Option<bool>,
@@ -208,6 +212,7 @@ impl SidebarSettings {
             hosts,
             overrides: self.overrides,
             select: self.select,
+            working_beats_done: self.working_beats_done,
         })
     }
 }
@@ -243,6 +248,7 @@ impl<'de> Deserialize<'de> for SidebarSettings {
                         "select" => settings.select = map.next_value()?,
                         "device_footer" => settings.device_footer = map.next_value()?,
                         "change_counts" => settings.change_counts = map.next_value()?,
+                        "working_beats_done" => settings.working_beats_done = map.next_value()?,
                         "activity_bar" => settings.activity_bar = Some(map.next_value()?),
                         "automations" => settings.automations = Some(map.next_value()?),
                         "hosts" => settings.hosts = map.next_value()?,

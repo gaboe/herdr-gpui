@@ -58,6 +58,7 @@ mod theme_files;
 mod themes;
 mod update_channel;
 mod usage_inline;
+mod working_beats_done;
 mod worktrees;
 mod zen;
 
