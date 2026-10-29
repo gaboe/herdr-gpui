@@ -19,6 +19,7 @@ mod summary;
 mod text;
 pub(super) mod viewer;
 mod widgets;
+mod working;
 
 pub(super) use settings::matching;
 mod visuals;
@@ -419,8 +420,8 @@ impl HerdrWindow {
 
     /// The layout's sign that the agent is working on a turn.
     fn render_chat_working(&self, chat: &ChatPane) -> Option<Div> {
-        let working = chat.session.transcript().status == Status::Working;
-        layout::layout_for(self.config.chat.layout).working(working, &self.chat_look())
+        let working = working::Working::of(chat.session.transcript(), super::now_ms());
+        layout::layout_for(self.config.chat.layout).working(working.as_ref(), &self.chat_look())
     }
 
     /// The chat's background where no page shows: on macOS, where a page

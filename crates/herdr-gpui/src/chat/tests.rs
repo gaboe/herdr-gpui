@@ -52,6 +52,7 @@ mod visual;
 mod widget_toggle;
 mod widgets;
 mod width;
+mod working;
 mod zoom;
 
 /// How long a test waits on a worker or a socket before failing.

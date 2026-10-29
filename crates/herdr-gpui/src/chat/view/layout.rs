@@ -154,12 +154,12 @@ pub(super) trait ChatLayout {
         None
     }
 
-    /// What shows under the conversation for whether the agent is working
-    /// on a turn: by default nothing, as the header already says so. A row
-    /// it draws keeps its height either way, so the list above it does not
-    /// change size as turns start and end.
-    fn working(&self, _working: bool, _look: &Look<'_>) -> Option<Div> {
-        None
+    /// What shows under the conversation while the agent works on a turn:
+    /// by default a pulsing dot, what it is doing, and how long the turn
+    /// has run. A row it draws keeps its height either way, so the list
+    /// above it does not change size as turns start and end.
+    fn working(&self, working: Option<&super::working::Working>, look: &Look<'_>) -> Option<Div> {
+        Some(super::working::row(working, look))
     }
 
     /// How a turn ended, from its description: by default a quiet rule
