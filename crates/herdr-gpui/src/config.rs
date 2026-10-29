@@ -122,6 +122,7 @@ pub(crate) use sidebar::{
     SidebarScope, SpaceLayout, SpaceToken, TokenStyle,
 };
 pub(crate) use sidebar_style::{ChangeCounts, DeviceFooter};
+pub(crate) use sidebar_style::{DEFAULT_STATUS_PRIORITY, status_name};
 pub use sidebar_style::{SelectMode, SidebarOverrides, SidebarStyle};
 pub use status_bar::StatusBar;
 pub use status_icons::StatusIcons;
