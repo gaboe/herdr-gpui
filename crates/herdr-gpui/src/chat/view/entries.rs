@@ -147,7 +147,7 @@ impl HerdrWindow {
             ),
             EntryKind::Image { author, .. } => match body.as_deref() {
                 Some(Body::Image(id)) => {
-                    self.render_chat_image(*author, *id, &chat.prepared.visuals)
+                    self.render_chat_image(pane_id, *author, *id, &chat.prepared.visuals, cx)
                 }
                 _ => div(),
             },
@@ -302,7 +302,9 @@ impl HerdrWindow {
             .children(
                 page_written(tool).map(|path| self.render_chat_file_page(pane_id, entry, path, cx)),
             )
-            .children(self.render_chat_tool_glance(entry, tool, summary, expanded, visuals))
+            .children(
+                self.render_chat_tool_glance(pane_id, entry, tool, summary, expanded, visuals, cx),
+            )
             .when(expanded, |card| {
                 card.child(
                     div()
@@ -364,13 +366,16 @@ impl HerdrWindow {
     /// What a tool call shows without being opened: each file's changed line
     /// counts and its pictures always, and while folded, its first locations
     /// and output lines. Opening it shows the full text in their place.
+    #[allow(clippy::too_many_arguments)]
     fn render_chat_tool_glance(
         &self,
+        pane_id: &str,
         entry: herdr_chat_protocol::EntryId,
         tool: &Tool,
         summary: Option<&ToolSummary>,
         expanded: bool,
         visuals: &Visuals,
+        cx: &mut Context<Self>,
     ) -> Vec<AnyElement> {
         let theme = &self.theme;
         let hues = Hues::of(theme);
@@ -414,12 +419,9 @@ impl HerdrWindow {
                     .flex_wrap()
                     .gap(px(6.))
                     .py(px(2.))
-                    .children(
-                        summary
-                            .images
-                            .iter()
-                            .map(|id| self.render_chat_visual(*id, visuals, Frame::ToolImage)),
-                    )
+                    .children(summary.images.iter().map(|id| {
+                        self.render_chat_visual(pane_id, *id, visuals, Frame::ToolImage, cx)
+                    }))
                     .into_any_element(),
             );
         }

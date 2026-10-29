@@ -47,6 +47,7 @@ mod timeline;
 mod tool_glance;
 mod typography;
 mod user_messages;
+mod viewer;
 mod visual;
 mod widget_toggle;
 mod widgets;

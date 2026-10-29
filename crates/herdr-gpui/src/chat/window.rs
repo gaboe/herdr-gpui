@@ -502,6 +502,14 @@ impl HerdrWindow {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
+        // A picture shown large takes Escape before anything under it.
+        if event.keystroke.key == "escape"
+            && !event.keystroke.modifiers.modified()
+            && self.close_chat_viewer(pane_id, cx)
+        {
+            cx.stop_propagation();
+            return;
+        }
         if self.chat_reader_key(pane_id, event, window, cx) {
             return;
         }

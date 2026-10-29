@@ -17,6 +17,7 @@ pub(crate) mod selection;
 mod settings;
 mod summary;
 mod text;
+pub(super) mod viewer;
 mod widgets;
 
 pub(super) use settings::matching;
@@ -406,6 +407,7 @@ impl HerdrWindow {
                     )
                     .children(self.render_chat_rail(chat, bounds)),
             )
+            .children(self.render_chat_viewer(chat, bounds, cx))
             .into_any_element()
     }
 
