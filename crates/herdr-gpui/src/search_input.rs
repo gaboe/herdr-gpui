@@ -1,5 +1,6 @@
 //! A single-line, native-IME-aware input for searchable pickers.
 use std::ops::Range;
+use unicode_segmentation::UnicodeSegmentation;
 
 use gpui::{
     App, Bounds, ClipboardItem, ContentMask, Context, CursorStyle, EntityInputHandler,
@@ -102,19 +103,20 @@ impl Editing {
         }
     }
 
-    // Scalar boundaries keep this small input dependency-free and never split UTF-8.
+    // Grapheme boundaries, so arrows and deletion never split what reads as
+    // one character: an accented letter, an emoji sequence, a Hangul syllable.
     fn previous(&self) -> usize {
         self.text[..self.cursor]
-            .char_indices()
+            .grapheme_indices(true)
             .next_back()
             .map_or(0, |(i, _)| i)
     }
 
     fn next(&self) -> usize {
         self.text[self.cursor..]
-            .chars()
+            .graphemes(true)
             .next()
-            .map_or(self.cursor, |ch| self.cursor + ch.len_utf8())
+            .map_or(self.cursor, |grapheme| self.cursor + grapheme.len())
     }
 
     fn replace(
@@ -824,6 +826,7 @@ mod tests {
     use super::*;
 
     mod completion;
+    mod composition;
     mod placeholder;
     mod word_keys;
 
