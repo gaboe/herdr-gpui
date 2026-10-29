@@ -613,8 +613,30 @@ impl HerdrWindow {
         if !input.read(cx).focus.is_focused(window) {
             return false;
         }
-        let Some(text) = cx.read_from_clipboard().and_then(|item| item.text()) else {
+        let Some(item) = cx.read_from_clipboard() else {
             return false;
+        };
+        // Files copied in a file manager carry their names as text too; they
+        // attach as a drop would instead.
+        if let Some(paths) = item.entries().iter().find_map(|entry| match entry {
+            ClipboardEntry::ExternalPaths(paths) if !paths.paths().is_empty() => {
+                Some(paths.paths().to_vec())
+            }
+            _ => None,
+        }) {
+            self.attach_chat_files(pane_id, paths, window, cx);
+            return true;
+        }
+        let Some(text) = item.text() else {
+            // A picture alone, such as a copied screenshot, attaches as a file.
+            let Some(image) = item.into_entries().find_map(|entry| match entry {
+                ClipboardEntry::Image(image) => Some(image),
+                _ => None,
+            }) else {
+                return false;
+            };
+            self.attach_chat_image(pane_id, image, window, cx);
+            return true;
         };
         let text = text.replace("\r\n", "\n").replace('\r', "\n");
         if !text.contains('\n') {

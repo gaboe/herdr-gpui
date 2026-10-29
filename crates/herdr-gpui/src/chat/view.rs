@@ -291,11 +291,14 @@ impl HerdrWindow {
             .when(!cfg!(target_os = "macos"), |view| {
                 view.bg(rgb(theme.background))
             })
-            // Files dragged over the chat become attachments when dropped.
+            // Files dragged over the chat become attachments when dropped. The
+            // chat occludes the terminal's own drop handler, so it takes the
+            // drop and routes it the same way.
             .drag_over::<ExternalPaths>({
                 let wash = theme.primary_wash();
                 move |style, _, _, _| style.bg(rgb(wash))
             })
+            .on_drop(cx.listener(Self::drop_terminal_files))
             .text_color(rgb(theme.foreground))
             .text_size(px(self.chat_text_size()))
             .text_font(&self.config.ui)
