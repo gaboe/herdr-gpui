@@ -3,7 +3,7 @@
 //! chat's layout arranges. The settings' menus open above them.
 
 use super::{
-    super::chats::ChatPane,
+    super::chats::{ChatPane, SendButton},
     Hues,
     layout::{ComposerParts, layout_for},
 };
@@ -188,43 +188,45 @@ impl HerdrWindow {
                         )
                 }))
         });
-        let accepts = transcript.status.accepts_prompts();
-        // While the agent works and nothing is written, the button stops the
-        // turn; once something is, it queues that as the next prompt.
-        let send = if chat.stops {
-            let pane_id = pane_id.clone();
-            let fill = hues.red;
-            round("chat-stop")
-                .bg(rgb(fill))
-                .child(
-                    div()
-                        .size(px(10.))
-                        .rounded(px(2.))
-                        .bg(rgb(theme.text_on(fill))),
-                )
-                .on_click(cx.listener(move |this, _: &ClickEvent, _, cx| {
-                    cx.stop_propagation();
-                    this.chat_send(&pane_id, Command::Cancel, cx);
-                }))
-        } else {
-            let pane_id = pane_id.clone();
-            let fill = if accepts {
-                theme.primary()
-            } else {
-                theme.active
-            };
-            round("chat-send")
-                .bg(rgb(fill))
-                .child(
-                    svg()
-                        .path("icons/arrow-right.svg")
-                        .size(px(12.))
-                        .text_color(rgb(theme.text_on(fill))),
-                )
-                .on_click(cx.listener(move |this, _: &ClickEvent, _, cx| {
-                    cx.stop_propagation();
-                    this.send_chat_composer(&pane_id, cx);
-                }))
+        // As in the phone app: Stop while the agent works and nothing is
+        // written, Send once something is, and Send greyed out otherwise.
+        let send = match chat.send {
+            SendButton::Stop => {
+                let pane_id = pane_id.clone();
+                let fill = hues.red;
+                round("chat-stop")
+                    .bg(rgb(fill))
+                    .child(
+                        div()
+                            .size(px(10.))
+                            .rounded(px(2.))
+                            .bg(rgb(theme.text_on(fill))),
+                    )
+                    .on_click(cx.listener(move |this, _: &ClickEvent, _, cx| {
+                        cx.stop_propagation();
+                        this.chat_send(&pane_id, Command::Cancel, cx);
+                    }))
+            }
+            SendButton::Send | SendButton::Off => {
+                let on = chat.send == SendButton::Send;
+                let pane_id = pane_id.clone();
+                let fill = if on { theme.primary() } else { theme.active };
+                round("chat-send")
+                    .bg(rgb(fill))
+                    .when(!on, |button| button.cursor_default())
+                    .child(
+                        svg()
+                            .path("icons/arrow-right.svg")
+                            .size(px(12.))
+                            .text_color(rgb(if on { theme.text_on(fill) } else { theme.muted })),
+                    )
+                    .on_click(cx.listener(move |this, _: &ClickEvent, _, cx| {
+                        cx.stop_propagation();
+                        if on {
+                            this.send_chat_composer(&pane_id, cx);
+                        }
+                    }))
+            }
         };
         let draft = div()
             .flex()

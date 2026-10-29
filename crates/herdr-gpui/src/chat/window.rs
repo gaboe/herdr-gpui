@@ -158,9 +158,9 @@ impl HerdrWindow {
             let accepts = pane.session.transcript().status.accepts_prompts();
             // The selected command shows as ghost text after the typed name.
             let text = composer.read(cx).text().to_owned();
-            let stops = pane.wants_stop(&text);
-            if pane.stops != stops {
-                pane.stops = stops;
+            let send = pane.send_button(&text);
+            if pane.send != send {
+                pane.send = send;
                 changed = true;
             }
             let found = assist::completions(pane.session.transcript(), &text);

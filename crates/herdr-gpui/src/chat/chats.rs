@@ -104,6 +104,17 @@ pub(crate) enum ChatInput {
     Terminal,
 }
 
+/// The composer's round button.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum SendButton {
+    /// Nothing to send: shown, but does nothing.
+    Off,
+    /// Sends the prompt, queued behind a running turn.
+    Send,
+    /// Cancels the running turn.
+    Stop,
+}
+
 pub(crate) struct ChatPane {
     /// Files the next prompt carries, in the order they were added.
     pub(crate) attachments: Vec<std::path::PathBuf>,
@@ -144,10 +155,10 @@ pub(crate) struct ChatPane {
     pub(crate) read_only_focus: Option<FocusHandle>,
     retry_at: Option<Instant>,
     pub(crate) selection: super::selection::Selection,
+    /// What the composer's round button does; the poll keeps it current as
+    /// the composer changes, since typing does not redraw the window.
+    pub(crate) send: SendButton,
     pub(crate) session: Session,
-    /// Whether the send button stops the running turn, as nothing is
-    /// written to send; the poll keeps it current as the composer changes.
-    pub(crate) stops: bool,
     pub(crate) target: Target,
     /// Expose more of an existing agent's original editor and dialogs inline.
     pub(crate) terminal_size: super::terminal::InputSize,
@@ -161,15 +172,20 @@ pub(crate) struct ChatPane {
 }
 
 impl ChatPane {
-    /// Whether the send button should stop the running turn rather than
-    /// queue a prompt: the agent is working and, with the composer's own
-    /// line `text`, nothing is written or attached.
-    pub(crate) fn wants_stop(&self, text: &str) -> bool {
-        self.session.transcript().status == herdr_chat_protocol::Status::Working
-            && text.trim().is_empty()
-            && self.draft.iter().all(|line| line.trim().is_empty())
-            && self.attachments.is_empty()
-            && self.uploading == 0
+    /// What the composer's round button does with `text` on its editable
+    /// line: as in the phone app, it stops a running turn while nothing is
+    /// written or attached, and sends only once something is.
+    pub(crate) fn send_button(&self, text: &str) -> SendButton {
+        let drafted = !text.trim().is_empty()
+            || self.draft.iter().any(|line| !line.trim().is_empty())
+            || !self.attachments.is_empty()
+            || self.uploading > 0;
+        let status = &self.session.transcript().status;
+        match (drafted, status) {
+            (false, herdr_chat_protocol::Status::Working) => SendButton::Stop,
+            (true, status) if status.accepts_prompts() => SendButton::Send,
+            _ => SendButton::Off,
+        }
     }
 
     /// Whether a callback made for `target` at `cursor` still applies: the
@@ -245,8 +261,8 @@ impl ChatPane {
             read_only_focus: None,
             retry_at: None,
             selection: Default::default(),
+            send: SendButton::Off,
             session: Session::default(),
-            stops: false,
             target,
             terminal_size: Default::default(),
             text_drag: Default::default(),
