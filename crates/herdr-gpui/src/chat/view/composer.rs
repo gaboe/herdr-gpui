@@ -216,7 +216,7 @@ impl HerdrWindow {
                     .when(!on, |button| button.cursor_default())
                     .child(
                         svg()
-                            .path("icons/arrow-right.svg")
+                            .path("icons/arrow-up.svg")
                             .size(px(12.))
                             .text_color(rgb(if on { theme.text_on(fill) } else { theme.muted })),
                     )
