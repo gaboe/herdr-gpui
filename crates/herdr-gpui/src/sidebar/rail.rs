@@ -17,7 +17,7 @@ use super::{
     layout::{self, Highlight, SidebarLook},
     line_height, visible_workspace_entries,
     wash::HostMark,
-    workspaces::{workspace_label, workspace_status},
+    workspaces::{rail_workspace_status, workspace_label},
 };
 use crate::{
     Command, HerdrWindow, NavigationTarget,
@@ -249,9 +249,11 @@ impl HerdrWindow {
                 let context_id = id.clone();
                 let focused = selected && workspace.focused;
                 let number = workspace.number.to_string();
-                let status = workspace_status(
-                    workspace,
+                let status = rail_workspace_status(
+                    &snapshot.workspaces,
                     &snapshot.agents,
+                    workspace,
+                    collapsed_repos,
                     self.config.sidebar_style.working_beats_done,
                 );
                 let marks = div()

@@ -187,6 +187,38 @@ pub(super) fn displayed_workspace_status(
         .unwrap_or(status)
 }
 
+/// The expanded sidebar keeps its legacy inline gate while the new rollup is
+/// disabled. Enabling it also enables the rollup when inline rows are hidden.
+pub(super) fn displayed_sidebar_workspace_status(
+    workspaces: &[ClientShellWorkspace],
+    agents: &[ClientShellAgent],
+    workspace: &ClientShellWorkspace,
+    collapsed: &HashSet<String>,
+    inline: bool,
+    working_beats_done: bool,
+) -> AgentStatus {
+    if !inline && !working_beats_done {
+        return workspace.agent_status;
+    }
+    displayed_workspace_status(workspaces, agents, workspace, collapsed, working_beats_done)
+}
+
+/// The compact rail uses the same collapsed-group rollup as the expanded
+/// sidebar only while the option is enabled.
+pub(super) fn rail_workspace_status(
+    workspaces: &[ClientShellWorkspace],
+    agents: &[ClientShellAgent],
+    workspace: &ClientShellWorkspace,
+    collapsed: &HashSet<String>,
+    working_beats_done: bool,
+) -> AgentStatus {
+    if working_beats_done {
+        displayed_workspace_status(workspaces, agents, workspace, collapsed, true)
+    } else {
+        workspace_status(workspace, agents, false)
+    }
+}
+
 /// The status a workspace shows in the sidebar. Agent statuses are local
 /// snapshot facts; the daemon's workspace rollup keeps its legacy priority.
 pub(super) fn workspace_status(
