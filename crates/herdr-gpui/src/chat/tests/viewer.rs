@@ -80,13 +80,38 @@ fn a_clicked_picture_opens_large_and_closes(cx: &mut TestAppContext) {
     poll(&view, &program, cx);
     assert!(cx.debug_bounds("chat-viewer").is_none());
 
-    // Escape closes it too.
+    // While it shows, typing never reaches the composer hidden behind it.
     cx.simulate_click(small.center(), Modifiers::default());
     poll(&view, &program, cx);
     assert!(cx.debug_bounds("chat-viewer").is_some());
+    cx.simulate_input("hidden");
+    cx.simulate_keystrokes("enter");
+    poll(&view, &program, cx);
+    assert_eq!(composer_text(&view, cx), "");
+    assert!(cx.debug_bounds("chat-viewer").is_some());
+
+    // Escape closes it, and the keyboard is back on the composer.
     cx.simulate_keystrokes("escape");
     cx.executor().advance_clock(crate::motion::LEAVE * 2);
     cx.run_until_parked();
     poll(&view, &program, cx);
     assert!(cx.debug_bounds("chat-viewer").is_none());
+    cx.simulate_input("back");
+    assert_eq!(composer_text(&view, cx), "back");
+}
+
+fn composer_text(
+    view: &gpui::Entity<crate::HerdrWindow>,
+    cx: &mut gpui::VisualTestContext,
+) -> String {
+    view.read_with(cx, |view, cx| {
+        let pane = view.chats.panes().next().unwrap();
+        let draft = pane.draft.join("\n");
+        let line = pane
+            .composer
+            .as_ref()
+            .map(|input| input.read(cx).text().to_owned())
+            .unwrap_or_default();
+        format!("{draft}{line}")
+    })
 }
