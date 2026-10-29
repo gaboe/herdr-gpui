@@ -80,6 +80,12 @@ impl HerdrWindow {
         px((self.chat_text_size() - 1.).max(10.))
     }
 
+    /// A tool call's text: its command, files, and output. Smaller than
+    /// the prose and muted, so the agent's answer reads first.
+    pub(in crate::chat) fn chat_tool_text(&self) -> Pixels {
+        px((self.chat_text_size() - 2.).max(10.))
+    }
+
     /// The interface font at the chat's prose size, for its native fields.
     pub(in crate::chat) fn chat_font(&self) -> crate::config::FontConfig {
         crate::config::FontConfig {

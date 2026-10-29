@@ -276,8 +276,8 @@ impl HerdrWindow {
                     .min_w_0()
                     .truncate()
                     .text_font(&self.config.terminal)
-                    .text_size(px(self.config.terminal.size - 1.))
-                    .text_color(rgb(theme.subtext()))
+                    .text_size(self.chat_tool_text())
+                    .text_color(rgb(theme.muted))
                     .child(self.render_chat_text(
                         pane_id,
                         entry,
@@ -313,9 +313,9 @@ impl HerdrWindow {
                         .min_w_0()
                         .w_full()
                         .overflow_x_scroll()
-                        .text_size(small)
+                        .text_size(self.chat_tool_text())
                         .text_font(&self.config.terminal)
-                        .text_color(rgb(theme.subtext()))
+                        .text_color(rgb(theme.muted))
                         .child(self.render_chat_text(
                             pane_id,
                             entry,
@@ -379,7 +379,7 @@ impl HerdrWindow {
     ) -> Vec<AnyElement> {
         let theme = &self.theme;
         let hues = Hues::of(theme);
-        let small = self.chat_small_text();
+        let small = self.chat_tool_text();
         let note = |text: String| {
             div()
                 .text_size(small)
@@ -397,6 +397,7 @@ impl HerdrWindow {
                 .flex()
                 .gap(px(6.))
                 .text_size(small)
+                .text_color(rgb(theme.muted))
                 .child(div().min_w_0().truncate().child(safe_text(&diff.path, 300)))
                 .child(
                     div()
@@ -431,7 +432,7 @@ impl HerdrWindow {
         glance.extend(tool.locations.iter().take(LOCATIONS).map(|location| {
             div()
                 .text_size(small)
-                .text_color(rgb(theme.subtext()))
+                .text_color(rgb(theme.muted))
                 .truncate()
                 .child(safe_text(location, 300))
                 .into_any_element()
@@ -445,7 +446,7 @@ impl HerdrWindow {
                 .debug_selector(move || format!("chat-tool-preview-{}", entry.0))
                 .text_size(small)
                 .text_font(&self.config.terminal)
-                .text_color(rgb(theme.subtext()))
+                .text_color(rgb(theme.muted))
                 .whitespace_nowrap()
                 .overflow_hidden()
                 .child(line.clone())
