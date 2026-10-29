@@ -30,7 +30,10 @@ fn prompts_steps_and_prose_share_one_column(cx: &mut TestAppContext) {
     let gutter = view.read_with(cx, |view, _| view.chat_text_size()) * 1.6;
     // The row's padding, then the gutter, then the text.
     let text = prompt.left() + px(16. + gutter);
-    assert!(mark.left() >= prompt.left() && mark.right() <= text, "{mark:?} in {prompt:?}");
+    assert!(
+        mark.left() >= prompt.left() && mark.right() <= text,
+        "{mark:?} in {prompt:?}"
+    );
     assert!(
         cx.debug_bounds("chat-ia-mark-2").is_none(),
         "only prompts take a mark"

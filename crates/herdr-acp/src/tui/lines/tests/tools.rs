@@ -23,7 +23,12 @@ fn a_command_title_is_muted_and_loses_its_ticks() {
     assert_eq!(plain(&lines)[0], "✓ git status --short");
     assert_eq!(lines[0].spans[0].style.fg, Some(Color::Green));
     assert_eq!(lines[0].spans[1].style.fg, Some(Color::DarkGray));
-    assert!(!lines[0].spans[1].style.add_modifier.contains(Modifier::BOLD));
+    assert!(
+        !lines[0].spans[1]
+            .style
+            .add_modifier
+            .contains(Modifier::BOLD)
+    );
 }
 
 #[test]
