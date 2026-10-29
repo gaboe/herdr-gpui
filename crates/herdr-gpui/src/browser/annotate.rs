@@ -179,10 +179,7 @@ fn line(text: &str, limit: usize) -> String {
         .collect();
     let text = safe_text(&spaced, limit * 4);
     let text: String = text.split_whitespace().collect::<Vec<_>>().join(" ");
-    match text.char_indices().nth(limit) {
-        Some((end, _)) => format!("{}\u{2026}", &text[..end]),
-        None => text,
-    }
+    crate::truncate::ellipsize(&text, limit).into_owned()
 }
 
 fn tag(text: &str) -> String {

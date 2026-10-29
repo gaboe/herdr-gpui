@@ -49,10 +49,7 @@ fn one_line(text: &str, limit: usize) -> String {
         .collect();
     let text = safe_text(&spaced, limit * 4);
     let text = text.split_whitespace().collect::<Vec<_>>().join(" ");
-    match text.char_indices().nth(limit) {
-        Some((end, _)) => format!("{}\u{2026}", &text[..end]),
-        None => text,
-    }
+    crate::truncate::ellipsize(&text, limit).into_owned()
 }
 
 /// The selection as quoted: lines keep their indentation, tabs become
@@ -67,16 +64,16 @@ fn quoted(text: &str) -> String {
             break;
         }
         let mut line = String::new();
-        for (count, c) in raw.chars().enumerate() {
-            if count == MAX_QUOTED_LINE_CHARS {
-                line.push('\u{2026}');
-                break;
-            }
+        let kept = crate::truncate::cut(raw, MAX_QUOTED_LINE_CHARS);
+        for c in kept.unwrap_or(raw).chars() {
             match c {
                 '\t' => line.push(' '),
                 c if unsafe_char(c) => {}
                 c => line.push(c),
             }
+        }
+        if kept.is_some() {
+            line.push(crate::truncate::ELLIPSIS);
         }
         lines.push(line.trim_end().to_owned());
     }
