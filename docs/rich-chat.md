@@ -20,8 +20,11 @@ render_existing = true
 
 `render_existing` opts into discovery of running Codex and Claude sessions.
 It is disabled by default. The chat header cycles
-through **Timeline**, **Bubbles**, **Terminal**, **Document**, **Cards**, and
-**iMessage**.
+through **Timeline**, **Bubbles**, **Terminal**, **Document**, **Cards**,
+**iMessage**, and **iA**. **iA** sets the chat like iA Writer: one column at
+about 70 characters a line, your prompts and the agent's steps as quiet notes
+hung from a gutter mark, the agent's prose in full ink, and earlier turns muted
+until you point at them.
 Select a layout directly with:
 
 ```sh

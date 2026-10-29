@@ -81,12 +81,20 @@ impl HerdrWindow {
         let body = chat.prepared.body(entry.id);
         let content = match &entry.kind {
             EntryKind::User { text, .. } | EntryKind::Agent { text } => {
+                // A layout may set the user's prompts in a quieter voice.
+                let size = match &entry.kind {
+                    EntryKind::User { .. } => {
+                        layout_for(self.config.chat.layout).prompt_text(&self.chat_look())
+                    }
+                    _ => self.chat_text_size(),
+                };
                 let message = match body.as_deref() {
                     Some(Body::Message(parts)) => self.render_chat_message(
                         pane_id,
                         entry.id,
                         parts,
                         &chat.prepared.visuals,
+                        size,
                         cx,
                     ),
                     Some(Body::Summary(summary)) => {
@@ -176,6 +184,11 @@ impl HerdrWindow {
                 .and_then(|entry| side(&entry.kind))
         };
         let transcript = chat.session.transcript();
+        // The current turn starts at the user's latest prompt.
+        let current = entries
+            .iter()
+            .rposition(|entry| matches!(entry.kind, EntryKind::User { .. }))
+            .is_none_or(|start| index >= start);
         let row = Row {
             entry,
             previous: near(index.checked_sub(1)),
@@ -183,6 +196,7 @@ impl HerdrWindow {
             agent: chat.session.agent(),
             live: index + 1 == entries.len()
                 && transcript.status == herdr_chat_protocol::Status::Working,
+            current,
             content,
         };
         layout_for(self.config.chat.layout).row(row, &self.chat_look())
@@ -426,7 +440,9 @@ impl HerdrWindow {
                     .into_any_element(),
             );
         }
-        if expanded {
+        // Opened, the details show it all; some layouts keep a folded call
+        // to its one line.
+        if expanded || !layout_for(self.config.chat.layout).tool_preview() {
             return glance;
         }
         glance.extend(tool.locations.iter().take(LOCATIONS).map(|location| {

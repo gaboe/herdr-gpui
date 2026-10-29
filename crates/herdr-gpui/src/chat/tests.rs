@@ -26,6 +26,7 @@ mod embeds;
 mod feature;
 mod file_links;
 mod glide;
+mod ia;
 mod imessage;
 mod layouts;
 mod link;

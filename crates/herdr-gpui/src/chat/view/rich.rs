@@ -23,6 +23,8 @@ struct RichContext<'a, 'b, 'c> {
     visuals: &'a Visuals,
     links: Links,
     selection: &'a Scope<'a>,
+    /// The text's size: the chat's, or a layout's for a quieter voice.
+    size: f32,
     cx: &'b mut Context<'c, HerdrWindow>,
 }
 
@@ -33,6 +35,7 @@ impl HerdrWindow {
         blocks: &[Block],
         visuals: &Visuals,
         selection: &Scope<'_>,
+        size: f32,
         cx: &mut Context<Self>,
     ) -> Div {
         let links = Links::new(self, pane_id, cx);
@@ -42,6 +45,7 @@ impl HerdrWindow {
             visuals,
             links,
             selection,
+            size,
             cx,
         };
         div()
@@ -53,7 +57,7 @@ impl HerdrWindow {
                 self.config.chat.layout != ChatLayoutMode::Terminal,
                 |view| view.text_font(&self.config.ui),
             )
-            .text_size(px(self.chat_text_size()))
+            .text_size(px(size))
             .when_some(layout.prose(&look), |view, ink| view.text_color(rgb(ink)))
             .line_height(relative(1.6))
             .children(blocks.iter().enumerate().map(|(index, block)| {

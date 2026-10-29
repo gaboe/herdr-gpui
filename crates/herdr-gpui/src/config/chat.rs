@@ -152,6 +152,9 @@ chat_layouts! {
     /// Blue bubbles on the right for the user, gray ones on the left for
     /// the agent, each run ending in a tail, like Apple's Messages.
     IMessage => "imessage", "iMessage";
+    /// The agent's prose alone at a book's measure, prompts and steps as
+    /// notes in the margin, and earlier turns muted, like iA Writer.
+    IA => "ia", "iA";
 }
 
 impl ChatLayoutMode {

@@ -27,7 +27,14 @@ fn imessage_prose_inherits_its_bubble_while_rich_surfaces_keep_theme_ink(cx: &mu
                 &selected,
                 &geometry,
             );
-            let mut prose = view.render_chat_rich("fixture", &[], &visuals, &selection, cx);
+            let mut prose = view.render_chat_rich(
+                "fixture",
+                &[],
+                &visuals,
+                &selection,
+                view.chat_text_size(),
+                cx,
+            );
             assert_eq!(prose.text_style().color, None, "{name}: inherit bubble ink");
             for style in [
                 Style::default(),
@@ -56,6 +63,7 @@ fn imessage_prose_inherits_its_bubble_while_rich_surfaces_keep_theme_ink(cx: &mu
                     visuals: &visuals,
                     links,
                     selection: &selection,
+                    size: view.chat_text_size(),
                     cx,
                 };
                 (
@@ -118,7 +126,14 @@ fn imessage_prose_inherits_its_bubble_while_rich_surfaces_keep_theme_ink(cx: &mu
             );
 
             view.config.chat.layout = ChatLayoutMode::Document;
-            let mut prose = view.render_chat_rich("fixture", &[], &visuals, &selection, cx);
+            let mut prose = view.render_chat_rich(
+                "fixture",
+                &[],
+                &visuals,
+                &selection,
+                view.chat_text_size(),
+                cx,
+            );
             assert_eq!(
                 prose.text_style().color,
                 ink,
