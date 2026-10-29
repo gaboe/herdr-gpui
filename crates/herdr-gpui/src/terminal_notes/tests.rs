@@ -53,3 +53,11 @@ fn prompt_fences_quotes_as_data() {
          \n3. On this terminal text:\n   ```text\n   ok\n   ```\n   Note: Fine.\n"
     );
 }
+
+#[test]
+fn a_quoted_line_of_combining_marks_stays_bounded() {
+    let line = format!("a{}", "\u{301}".repeat(5000));
+    let quote = quoted(&line);
+    assert!(quote.chars().count() <= MAX_QUOTED_LINE_CHARS + 1);
+    assert!(quote.ends_with('\u{2026}'));
+}

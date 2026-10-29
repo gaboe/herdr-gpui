@@ -103,20 +103,33 @@ impl Editing {
         }
     }
 
-    // Grapheme boundaries, so arrows and deletion never split what reads as
-    // one character: an accented letter, an emoji sequence, a Hangul syllable.
-    fn previous(&self) -> usize {
-        self.text[..self.cursor]
+    // Grapheme boundaries of the whole text, so arrows and deletion never
+    // split what reads as one character: an accented letter, an emoji
+    // sequence, a Hangul syllable. A slice would start a cluster of its own
+    // at the cursor, splitting a letter from the accent typed before it.
+    fn boundaries(&self) -> impl DoubleEndedIterator<Item = usize> + '_ {
+        self.text
             .grapheme_indices(true)
-            .next_back()
-            .map_or(0, |(i, _)| i)
+            .map(|(i, _)| i)
+            .chain([self.text.len()])
+    }
+
+    fn previous(&self) -> usize {
+        self.boundaries().rfind(|i| *i < self.cursor).unwrap_or(0)
     }
 
     fn next(&self) -> usize {
-        self.text[self.cursor..]
-            .graphemes(true)
-            .next()
-            .map_or(self.cursor, |grapheme| self.cursor + grapheme.len())
+        self.boundaries()
+            .find(|i| *i > self.cursor)
+            .unwrap_or(self.cursor)
+    }
+
+    /// The first boundary at or after `offset`, where an edit leaves the
+    /// caret when what it inserted joins the cluster after it.
+    fn boundary_from(&self, offset: usize) -> usize {
+        self.boundaries()
+            .find(|i| *i >= offset)
+            .unwrap_or(self.text.len())
     }
 
     fn replace(
@@ -136,6 +149,9 @@ impl Editing {
         self.marked = (composing && !inserted.is_empty())
             .then_some(range.start..range.start + inserted.len());
         self.cursor = range.start + inserted.len();
+        if !composing {
+            self.cursor = self.boundary_from(self.cursor);
+        }
         self.anchor = self.cursor;
         if composing && let Some(selection) = selection {
             // IME selection is relative to the supplied text, not the whole buffer.

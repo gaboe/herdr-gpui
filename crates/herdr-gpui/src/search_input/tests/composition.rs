@@ -143,3 +143,30 @@ fn deletion_and_arrows_step_over_whole_grapheme_clusters(cx: &mut gpui::TestAppC
     cx.simulate_keystrokes("delete");
     assert_eq!(input.read_with(cx, |input, _| input.text().to_owned()), "");
 }
+
+#[gpui::test]
+fn a_letter_typed_before_an_accent_leaves_the_caret_after_both(cx: &mut gpui::TestAppContext) {
+    let (input, cx) = field(cx);
+    cx.update(|window, cx| {
+        input.update(cx, |input, cx| {
+            input.replace_text_in_range(None, "\u{301}", window, cx)
+        })
+    });
+    cx.simulate_keystrokes("home");
+    cx.update(|window, cx| {
+        input.update(cx, |input, cx| {
+            input.replace_text_in_range(None, "e", window, cx)
+        })
+    });
+    let (text, cursor) =
+        input.read_with(cx, |input, _| (input.text().to_owned(), input.edit.cursor));
+    assert_eq!((text.as_str(), cursor), ("e\u{301}", 3));
+    // Delete at the end removes nothing; Backspace removes the whole letter.
+    cx.simulate_keystrokes("delete");
+    assert_eq!(
+        input.read_with(cx, |input, _| input.text().to_owned()),
+        "e\u{301}"
+    );
+    cx.simulate_keystrokes("backspace");
+    assert_eq!(input.read_with(cx, |input, _| input.text().to_owned()), "");
+}

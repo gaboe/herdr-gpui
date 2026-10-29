@@ -1,7 +1,8 @@
 //! Notes on text the user selected in a terminal, and the prompt they reach
 //! the agent as. The quoted text is whatever the terminal showed, so the
 //! prompt fences it as data, and it loses controls before it is kept.
-use crate::notifications::{safe_text, unsafe_char};
+use crate::notifications::unsafe_char;
+use crate::truncate::one_line;
 
 /// Queued notes at once, as for page annotations.
 pub(crate) const MAX_NOTES: usize = 20;
@@ -40,18 +41,6 @@ impl Note {
     }
 }
 
-/// One line of text: no controls, no runs of whitespace, and bounded.
-fn one_line(text: &str, limit: usize) -> String {
-    let spaced: String = text
-        .chars()
-        .take(limit * 4)
-        .map(|c| if c.is_control() { ' ' } else { c })
-        .collect();
-    let text = safe_text(&spaced, limit * 4);
-    let text = text.split_whitespace().collect::<Vec<_>>().join(" ");
-    crate::truncate::ellipsize(&text, limit).into_owned()
-}
-
 /// The selection as quoted: lines keep their indentation, tabs become
 /// spaces, other controls go, blank lines around it are dropped, and long
 /// lines or selections are cut with an ellipsis.
@@ -64,7 +53,7 @@ fn quoted(text: &str) -> String {
             break;
         }
         let mut line = String::new();
-        let kept = crate::truncate::cut(raw, MAX_QUOTED_LINE_CHARS);
+        let kept = crate::truncate::cut_chars(raw, MAX_QUOTED_LINE_CHARS);
         for c in kept.unwrap_or(raw).chars() {
             match c {
                 '\t' => line.push(' '),
