@@ -10,6 +10,7 @@ use std::ops::Range;
 
 mod code;
 mod links;
+mod rhythm;
 
 use super::{
     copy,
@@ -48,10 +49,13 @@ impl HerdrWindow {
             size,
             cx,
         };
+        // A reading width the user chose is followed as set; at the default,
+        // prose keeps to a book's measure inside the wider column.
+        let measure = (self.config.chat.max_width == crate::config::chat::DEFAULT_MAX_WIDTH)
+            .then_some(size * rhythm::MEASURE);
         div()
             .flex()
             .flex_col()
-            .gap(px(12.))
             .min_w_0()
             .when(
                 self.config.chat.layout != ChatLayoutMode::Terminal,
@@ -94,7 +98,16 @@ impl HerdrWindow {
                         .rich_table(align, rows, index, &mut context)
                         .into_any_element(),
                 };
-                div().id(("rich-block", index)).min_w_0().child(element)
+                let previous = index.checked_sub(1).and_then(|before| blocks.get(before));
+                div()
+                    .id(("rich-block", index))
+                    .min_w_0()
+                    .pt(px(size * rhythm::space_before(previous, block)))
+                    .when_some(
+                        measure.filter(|_| rhythm::is_prose(block)),
+                        |row, measure| row.max_w(px(measure)),
+                    )
+                    .child(element)
             }))
     }
 
@@ -113,10 +126,8 @@ impl HerdrWindow {
         let row = row
             .when_some(heading(kind), |row, level| {
                 row.font_weight(FontWeight::SEMIBOLD)
-                    .text_size(px(self.chat_text_size() * heading_scale(level)))
+                    .text_size(px(context.size * rhythm::heading_scale(level)))
                     .line_height(relative(1.3))
-                    .pt(px(10.))
-                    .pb(px(2.))
             })
             .when(kind == Kind::Quote, |row| {
                 row.pl(px(10.))
@@ -468,15 +479,6 @@ fn heading(kind: Kind) -> Option<HeadingLevel> {
     match kind {
         Kind::Heading(level) => Some(level),
         _ => None,
-    }
-}
-
-fn heading_scale(level: HeadingLevel) -> f32 {
-    match level {
-        HeadingLevel::H1 => 1.65,
-        HeadingLevel::H2 => 1.4,
-        HeadingLevel::H3 => 1.2,
-        _ => 1.05,
     }
 }
 

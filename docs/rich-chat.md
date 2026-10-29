@@ -35,7 +35,10 @@ In **Settings > General**, turn on **Full-width chat** to use the available
 conversation area, or set **Chat width** with the slider or numeric field.
 The default is 800 logical pixels; custom widths range from 320 to 4,000 and
 shrink to fit narrower windows. The transcript and native composer use the
-same width. The equivalent commands are:
+same width. At the default, the agent's prose keeps to about 70 characters a
+line, the length that reads most easily, while code, tables, and pictures use
+the whole column; a width you choose is followed as set. The equivalent
+commands are:
 
 ```sh
 herdr-gpui config set chat.max_width 0     # full width
