@@ -41,6 +41,7 @@ mod recall;
 mod selection;
 mod session;
 mod start;
+mod stop;
 mod terminal_input;
 mod timeline;
 mod tool_glance;

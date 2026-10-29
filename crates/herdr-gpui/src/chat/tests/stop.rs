@@ -1,0 +1,58 @@
+//! The send button stops a running turn while nothing is written, and
+//! queues the next prompt once something is.
+
+use super::{
+    overlay::{attach_with, open, poll},
+    *,
+};
+use gpui::{Modifiers, TestAppContext};
+use herdr_chat_protocol::Command;
+use herdr_client::ConnectTarget;
+
+fn working() -> ServerMessage {
+    let mut transcript = Transcript::new("Claude");
+    transcript.status = Status::Working;
+    transcript.entries = vec![agent(1, "Thinking.")];
+    ServerMessage::Snapshot {
+        cursor: cursor(1, 0),
+        transcript: Box::new(transcript),
+    }
+}
+
+fn next_command(stream: &mut Peer) -> Command {
+    match read(stream) {
+        Some(ClientMessage::Command { command, .. }) => command,
+        other => panic!("a command, got {other:?}"),
+    }
+}
+
+#[gpui::test]
+fn the_send_button_stops_a_running_turn(cx: &mut TestAppContext) {
+    let (view, _peer, cx) = open(cx, ConnectTarget::Local);
+    let program = Program::new();
+    let mut stream = attach_with(&view, &program, working(), cx);
+    poll(&view, &program, cx);
+    assert!(cx.debug_bounds("chat-send").is_none());
+    let stop = cx.debug_bounds("chat-stop").unwrap();
+    cx.simulate_click(stop.center(), Modifiers::default());
+    assert_eq!(next_command(&mut stream), Command::Cancel);
+}
+
+#[gpui::test]
+fn a_written_prompt_turns_stop_back_into_send(cx: &mut TestAppContext) {
+    let (view, _peer, cx) = open(cx, ConnectTarget::Local);
+    let program = Program::new();
+    let _stream = attach_with(&view, &program, working(), cx);
+    poll(&view, &program, cx);
+    assert!(cx.debug_bounds("chat-stop").is_some());
+
+    cx.simulate_input("next");
+    poll(&view, &program, cx);
+    assert!(cx.debug_bounds("chat-stop").is_none());
+    assert!(cx.debug_bounds("chat-send").is_some());
+
+    // Taking the text back brings the stop button back.
+    cx.simulate_keystrokes("backspace backspace backspace backspace");
+    poll(&view, &program, cx);
+    assert!(cx.debug_bounds("chat-stop").is_some());
+}

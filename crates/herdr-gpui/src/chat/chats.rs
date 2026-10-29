@@ -145,6 +145,9 @@ pub(crate) struct ChatPane {
     retry_at: Option<Instant>,
     pub(crate) selection: super::selection::Selection,
     pub(crate) session: Session,
+    /// Whether the send button stops the running turn, as nothing is
+    /// written to send; the poll keeps it current as the composer changes.
+    pub(crate) stops: bool,
     pub(crate) target: Target,
     /// Expose more of an existing agent's original editor and dialogs inline.
     pub(crate) terminal_size: super::terminal::InputSize,
@@ -158,6 +161,17 @@ pub(crate) struct ChatPane {
 }
 
 impl ChatPane {
+    /// Whether the send button should stop the running turn rather than
+    /// queue a prompt: the agent is working and, with the composer's own
+    /// line `text`, nothing is written or attached.
+    pub(crate) fn wants_stop(&self, text: &str) -> bool {
+        self.session.transcript().status == herdr_chat_protocol::Status::Working
+            && text.trim().is_empty()
+            && self.draft.iter().all(|line| line.trim().is_empty())
+            && self.attachments.is_empty()
+            && self.uploading == 0
+    }
+
     /// Whether a callback made for `target` at `cursor` still applies: the
     /// same binding and the same transcript epoch, not a replacement session.
     pub(crate) fn is_current(&self, target: &Target, cursor: Option<Cursor>) -> bool {
@@ -232,6 +246,7 @@ impl ChatPane {
             retry_at: None,
             selection: Default::default(),
             session: Session::default(),
+            stops: false,
             target,
             terminal_size: Default::default(),
             text_drag: Default::default(),

@@ -9,6 +9,7 @@ use super::{
 };
 use crate::{HerdrWindow, config::corners};
 use gpui::{prelude::*, *};
+use herdr_chat_protocol::Command;
 
 /// Draft lines shown above the editable one; earlier ones are counted, so a
 /// long draft never pushes the editable line out of the pane.
@@ -188,7 +189,24 @@ impl HerdrWindow {
                 }))
         });
         let accepts = transcript.status.accepts_prompts();
-        let send = {
+        // While the agent works and nothing is written, the button stops the
+        // turn; once something is, it queues that as the next prompt.
+        let send = if chat.stops {
+            let pane_id = pane_id.clone();
+            let fill = hues.red;
+            round("chat-stop")
+                .bg(rgb(fill))
+                .child(
+                    div()
+                        .size(px(10.))
+                        .rounded(px(2.))
+                        .bg(rgb(theme.text_on(fill))),
+                )
+                .on_click(cx.listener(move |this, _: &ClickEvent, _, cx| {
+                    cx.stop_propagation();
+                    this.chat_send(&pane_id, Command::Cancel, cx);
+                }))
+        } else {
             let pane_id = pane_id.clone();
             let fill = if accepts {
                 theme.primary()

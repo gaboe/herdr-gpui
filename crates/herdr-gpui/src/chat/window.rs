@@ -144,17 +144,25 @@ impl HerdrWindow {
                     continue;
                 }
             }
-            let composer = pane.composer.get_or_insert_with(|| {
-                changed = true;
-                cx.new(|cx| {
-                    let mut input = SearchInput::new(cx);
-                    input.set_frameless(cx);
-                    input
+            let composer = pane
+                .composer
+                .get_or_insert_with(|| {
+                    changed = true;
+                    cx.new(|cx| {
+                        let mut input = SearchInput::new(cx);
+                        input.set_frameless(cx);
+                        input
+                    })
                 })
-            });
+                .clone();
             let accepts = pane.session.transcript().status.accepts_prompts();
             // The selected command shows as ghost text after the typed name.
             let text = composer.read(cx).text().to_owned();
+            let stops = pane.wants_stop(&text);
+            if pane.stops != stops {
+                pane.stops = stops;
+                changed = true;
+            }
             let found = assist::completions(pane.session.transcript(), &text);
             if pane.completion >= found.len() {
                 pane.completion = 0;

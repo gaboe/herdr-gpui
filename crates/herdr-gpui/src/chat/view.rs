@@ -29,7 +29,7 @@ use crate::{
     fonts::StyledFont,
 };
 use gpui::{prelude::*, *};
-use herdr_chat_protocol::{Command, Status};
+use herdr_chat_protocol::Status;
 use herdr_client::protocol::{PaneSurfaceFrame, SurfaceRect};
 
 /// Where a pane's cells are, relative to the terminal canvas: the box the
@@ -527,17 +527,6 @@ impl HerdrWindow {
                 .hover(|button| button.bg(rgb(theme.active)))
                 .on_mouse_down(MouseButton::Left, |_, _, cx| cx.stop_propagation())
         };
-        let cancel =
-            (*status == Status::Working && chat.input() == ChatInput::Composer).then(|| {
-                let pane_id = pane_id.clone();
-                button("chat-cancel")
-                    .text_color(rgb(hues.red))
-                    .child("Stop")
-                    .on_click(cx.listener(move |this, _: &ClickEvent, _, cx| {
-                        cx.stop_propagation();
-                        this.chat_send(&pane_id, Command::Cancel, cx);
-                    }))
-            });
         let watching = (transcript.clients > 1).then(|| {
             div()
                 .flex_none()
@@ -625,7 +614,6 @@ impl HerdrWindow {
                     .child(div().flex_1())
                     .children(reconnecting)
                     .children(watching)
-                    .children(cancel)
                     .child(layout)
                     .children(rail)
                     .child(terminal),
